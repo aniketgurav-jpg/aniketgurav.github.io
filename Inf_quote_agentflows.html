@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Seal Quotation Assistant</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    .field { margin-bottom: 1rem; }
+    .label { font-weight: bold; margin-bottom: 0.3rem; display: block; }
+    .input, select {
+      width: 100%; padding: 0.5rem;
+      border-radius: 5px; border: 1px solid #ccc;
+    }
+    .btn {
+      background: #007bff; color: white;
+      padding: 0.6rem 1.2rem; border: none;
+      border-radius: 5px; cursor: pointer; margin-top: 1rem;
+    }
+    .btn:hover { background: #0056b3; }
+    .response {
+      margin-top: 1.5rem; background: #e9ffe9;
+      padding: 1rem; border-radius: 5px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Seal Quote Assistant</h2>
+    <form id="quoteForm">
+      <div class="field">
+        <label class="label">Seal Shape:</label>
+        <select id="type_of_seal" required>
+          <option value="">--Select--</option>
+          <option value="Round">Round</option>
+          <option value="Rectangular">Rectangular</option>
+          <option value="U-Type">U-Type</option>
+          <option value="Straight">Straight</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="label">Reinforced:</label>
+        <select id="is_reinforced" required>
+          <option value="">--Select--</option>
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="label">Circumference (mm):</label>
+        <input class="input" type="number" id="circumference" required />
+      </div>
+
+      <div class="field">
+        <label class="label">Quantity:</label>
+        <input class="input" type="number" id="quantity" required />
+      </div>
+
+      <div class="field">
+        <label class="label">Include Air Connector (Rubber Hose):</label>
+        <select id="air_connector" required>
+          <option value="">--Select--</option>
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="label">Corners:</label>
+        <select id="corners" required>
+          <option value="">--Select--</option>
+          <option value="0">0</option>
+          <option value="2">2</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn">Get Quote</button>
+    </form>
+
+    <div id="response" class="response"></div>
+  </div>
+
+  <script>
+    document.getElementById('quoteForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const input = {
+        type_of_seal: document.getElementById('type_of_seal').value,
+        is_reinforced: document.getElementById('is_reinforced').value === 'true',
+        circumference: parseFloat(document.getElementById('circumference').value),
+        quantity: parseInt(document.getElementById('quantity').value),
+        air_connector: document.getElementById('air_connector').value === 'true',
+        corners: parseInt(document.getElementById('corners').value),
+      };
+
+      try {
+        const res = await fetch('https://westernrubbers.app.n8n.cloud/webhook/quote-calc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input)
+        });
+
+        const result = await res.json();
+
+        document.getElementById('response').style.display = 'block';
+        document.getElementById('response').innerHTML = `
+          <strong>Quotation Summary</strong><br><br>
+          <b>Per Piece Pricing:</b><br>
+          1 pc: ₹${result.one_piece}<br>
+          5 pcs: ₹${result.five_pieces}<br>
+          10 pcs: ₹${result.ten_pieces}<br>
+          25 pcs: ₹${result.twentyfive_pieces}<br>
+          50 pcs: ₹${result.fifty_pieces}<br><br>
+          <b>Quantity Selected:</b> ${result.quantity}
+        `;
+      } catch (err) {
+        document.getElementById('response').style.display = 'block';
+        document.getElementById('response').innerHTML = `<strong>Error:</strong> ${err.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
